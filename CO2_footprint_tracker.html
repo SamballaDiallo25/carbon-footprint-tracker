@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carbon Footprint Tracker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link rel="stylesheet" href="CO2_footprint_tracker.css">
+</head>
+<body data-theme="light">
+    <!-- Authentication Section -->
+    <div id="authSection" class="auth-container">
+        <h2 class="auth-title">🌱 Carbon Tracker</h2>
+        
+        <!-- Login Form -->
+        <div id="loginForm">
+            <h3 style="text-align: center; margin-bottom: 1.5rem;">Login</h3>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" id="loginEmail" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <div class="password-container">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="loginPassword" class="form-input" required>
+                    <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')"></button>
+                </div>
+            </div>
+            <button class="btn btn-primary" style="width: 100%;" onclick="login()">Login</button>
+            <div class="auth-switch">
+                <p>Don't have an account? <a href="#" onclick="showRegister()">Register here</a></p>
+            </div>
+        </div>
+
+        <!-- Register Form -->
+        <div id="registerForm" class="hidden">
+            <h3 style="text-align: center; margin-bottom: 1.5rem;">Register</h3>
+            <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input type="text" id="registerName" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" id="registerEmail" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <div class="password-container">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="registerPassword" class="form-input" required oninput="validatePassword()">
+                    <button type="button" class="password-toggle" onclick="togglePassword('registerPassword')"></button>
+                </div>
+                <div class="password-requirements">
+                    <span class="requirement" id="lengthReq">• At least 8 characters</span>
+                    <span class="requirement" id="upperReq">• One uppercase letter</span>
+                    <span class="requirement" id="numberReq">• One number</span>
+                    <span class="requirement" id="specialReq">• One special character</span>
+                </div>
+            </div>
+            <button class="btn btn-primary" style="width: 100%;" onclick="register()" id="registerBtn" disabled>Register</button>
+            <div class="auth-switch">
+                <p>Already have an account? <a href="#" onclick="showLogin()">Login here</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Section -->
+    <div id="appSection" class="hidden">
+        <div class="header">
+            <div class="logo">🌱 Carbon Tracker</div>
+            <div class="user-menu">
+                <button class="user-button" onclick="toggleUserMenu()">
+                    <span id="userName">User Name</span> ▼
+                </button>
+                <div class="dropdown-content" id="userDropdown">
+                    <div class="user-info">
+                        <div class="user-name" id="userDisplayName">User Name</div>
+                        <div class="user-email" id="userDisplayEmail">user@example.com</div>
+                    </div>
+                    <a class="dropdown-item" onclick="toggleTheme()">
+                        <span id="themeText">🌙 Dark Mode</span>
+                    </a>
+                    <a class="dropdown-item" onclick="logout()">🚪 Logout</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <nav class="nav-tabs">
+                <button class="nav-tab active" onclick="showSection('dashboard')" id="dashboardTab">Dashboard</button>
+                <button class="nav-tab" onclick="showSection('track')" id="trackTab">Track Activities</button>
+                <button class="nav-tab" onclick="showSection('history')" id="historyTab">History</button>
+                <button class="nav-tab" onclick="showSection('analytics')" id="analyticsTab">Analytics</button>
+            </nav>
+
+            <!-- Dashboard Section -->
+            <div id="dashboardSection">
+                <div class="summary-card">
+                    <div class="summary-value" id="totalFootprint">0.0</div>
+                    <div class="summary-label">kg CO₂ This Month</div>
+                </div>
+
+                <div class="card">
+                    <h3>Recent Activity</h3>
+                    <div id="recentActivity">
+                        <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No recent activities. Start tracking to see your carbon footprint!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Track Activities Section -->
+            <div id="trackSection" class="hidden">
+                <div class="category-grid">
+                    <!-- Transport -->
+                    <div class="category-card">
+                        <h3 class="category-title">🚗 Transport</h3>
+                        <div class="form-group">
+                            <label class="form-label">Transport Type</label>
+                            <select class="form-select" id="transportType">
+                                <option value="car">Car (Gasoline)</option>
+                                <option value="electric_car">Electric Car</option>
+                                <option value="bus">Public Bus</option>
+                                <option value="train">Train</option>
+                                <option value="bike">Bicycle</option>
+                                <option value="walk">Walking</option>
+                            </select>
+                        </div>
+                        <div class="input-row">
+                            <div>
+                                <label class="form-label">Distance (km)</label>
+                                <input type="number" class="form-input" id="transportDistance" min="0" step="0.1">
+                            </div>
+                            <button class="btn btn-primary" onclick="addActivity('transport')">Add</button>
+                        </div>
+                    </div>
+
+                    <!-- Food -->
+                    <div class="category-card">
+                        <h3 class="category-title">🍽️ Food</h3>
+                        <div class="form-group">
+                            <label class="form-label">Food Category</label>
+                            <select class="form-select" id="foodType">
+                                <option value="proteins">Proteins (Meat, Fish, Eggs)</option>
+                                <option value="carbs">Carbohydrates (Rice, Bread, Pasta)</option>
+                                <option value="fats">Fats (Oils, Nuts, Dairy)</option>
+                                <option value="fibers">Fibers (Vegetables, Fruits)</option>
+                            </select>
+                        </div>
+                        <div class="input-row">
+                            <div>
+                                <label class="form-label">Portion Size (grams)</label>
+                                <input type="number" class="form-input" id="foodPortion" step="1">
+                            </div>
+                            <button class="btn btn-primary" onclick="addActivity('food')">Add</button>
+                        </div>
+                    </div>
+
+                    <!-- Energy Source -->
+                    <div class="category-card">
+                        <h3 class="category-title">⚡ Energy Use</h3>
+                        <div class="form-group">
+                            <label class="form-label">Energy Type</label>
+                            <select class="form-select" id="electricityType">
+                                <option value="grid"> Electricity</option>
+                                <option value="renewable">Renewable Energy</option>
+                                <option value="coal">Coal Power</option>
+                                <option value="natural_gas">Natural Gas</option>
+                            </select>
+                        </div>
+                        <div class="input-row">
+                            <div>
+                                <label class="form-label">Usage (kWh)</label>
+                                <input type="number" class="form-input" id="electricityUsage" step="0.1">
+                            </div>
+                            <button class="btn btn-primary" onclick="addActivity('electricity')">Add</button>
+                        </div>
+                    </div>
+
+                    <!-- Goods and Services -->
+                    <div class="category-card">
+                        <h3 class="category-title">🛍️ Goods & Services</h3>
+                        <div class="form-group">
+                            <label class="form-label">Item Type</label>
+                            <select class="form-select" id="goodsType">
+                                <option value="clothing">Clothing Purchase</option>
+                                <option value="electronics">Electronic Devices</option>
+                                <option value="household">Household Goods</option>
+                                <option value="online_shopping">Online Shopping</option>
+                            </select>
+                        </div>
+                        <div class="input-row">
+                            <div>
+                                <label class="form-label">Frequency (per month)</label>
+                                <input type="number" class="form-input" id="goodsFrequency" step="1">
+                            </div>
+                            <button class="btn btn-primary" onclick="addActivity('goods')">Add</button>
+                        </div>
+                    </div>
+
+                    <!-- Travel Lifestyle -->
+                    <div class="category-card">
+                        <h3 class="category-title">✈️ Travel & Lifestyle</h3>
+                        <div class="form-group">
+                            <label class="form-label">Activity Type</label>
+                            <select class="form-select" id="travelType">
+                                <option value="air_travel">Air Travel</option>
+                                <option value="hotel_stays">Hotel Stays</option>
+                                <option value="leisure">Leisure Activities</option>
+                            </select>
+                        </div>
+                        <div class="input-row">
+                            <div>
+                                <label class="form-label">Frequency (per month)</label>
+                                <input type="number" class="form-input" id="travelFrequency" step="0.1">
+                            </div>
+                            <button class="btn btn-primary" onclick="addActivity('travel')">Add</button>
+                        </div>
+                    </div>
+
+                    <!-- Housing -->
+                    <div class="category-card">
+                        <h3 class="category-title">🏠 Housing</h3>
+                        <div class="form-group">
+                            <label class="form-label">Housing Factor</label>
+                            <select class="form-select" id="housingType">
+                                <option value="home_size">Home Size (sqm)</option>
+                                <option value="insulation">Building Insulation Quality</option>
+                                <option value="occupants">Number of Occupants</option>
+                            </select>
+                        </div>
+                        <div class="input-row">
+                            <div>
+                                <label class="form-label">Value</label>
+                                <input type="number" class="form-input" id="housingValue" step="1">
+                            </div>
+                            <button class="btn btn-primary" onclick="addActivity('housing')">Add</button>
+                        </div>
+                    </div>
+
+                    <!-- Waste & Recycling -->
+                    <div class="category-card">
+                        <h3 class="category-title">🗑️ Waste & Recycling</h3>
+                        <div class="form-group">
+                            <label class="form-label">Waste Type</label>
+                            <select class="form-select" id="wasteType">
+                                <option value="general_waste">General Waste Generated</option>
+                                <option value="recycling">Recycling Habits</option>
+                                <option value="composting">Composting</option>
+                            </select>
+                        </div>
+                        <div class="input-row">
+                            <div>
+                                <label class="form-label">Amount (kg/week)</label>
+                                <input type="number" class="form-input" id="wasteAmount" step="0.1">
+                            </div>
+                            <button class="btn btn-primary" onclick="addActivity('waste')">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Section -->
+            <div id="historySection" class="hidden">
+                <div class="card">
+                    <h3>Activity History</h3>
+                    <div id="historyList">
+                        <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No history available yet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Section -->
+            <div id="analyticsSection" class="hidden">
+                <div class="card">
+                    <h3>Carbon Footprint Analytics</h3>
+                    <div class="chart-container">
+                        <canvas id="footprintChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>Category Breakdown</h3>
+                    <div class="chart-container">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="CO2_footprint_tracker.js"></script>
+</body>
+</html>
